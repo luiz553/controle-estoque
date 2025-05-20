@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Estoque com Exportação</title>
+</head>
+<body>
+
+  <h1>Controle de Estoque</h1>
+
+  <h2>Adicionar Produto</h2>
+  <input type="text" id="nomeProduto" placeholder="Nome do produto">
+  <input type="number" id="quantidadeProduto" placeholder="Quantidade">
+  <button id="btnAdicionar">Adicionar</button>
+
+  <h2>Vender Produto</h2>
+  <input type="text" id="nomeVenda" placeholder="Nome do produto">
+  <input type="number" id="quantidadeVenda" placeholder="Quantidade">
+  <button id="btnVender">Vender</button>
+
+  <h2>Estoque Atual</h2>
+  <ul id="listaEstoque"></ul>
+
+  <h2>Exportar Estoque</h2>
+  <button id="btnExportar">Exportar Estoque</button>
+
+  <script>
+    const estoque = {};
+
+    function atualizarEstoque() {
+      const lista = document.getElementById("listaEstoque");
+      lista.innerHTML = "";
+      for (const produto in estoque) {
+        const item = document.createElement("li");
+        item.textContent = `${produto}: ${estoque[produto]} unidades`;
+        lista.appendChild(item);
+      }
+    }
+
+    function adicionarProduto() {
+      const nome = document.getElementById("nomeProduto").value.trim();
+      const qtd = parseInt(document.getElementById("quantidadeProduto").value);
+      if (!nome || isNaN(qtd) || qtd <= 0) return;
+      estoque[nome] = (estoque[nome] || 0) + qtd;
+      localStorage.setItem('estoque', JSON.stringify(estoque)); // Salvar no LocalStorage
+      atualizarEstoque();
+    }
+
+    function venderProduto() {
+      const nome = document.getElementById("nomeVenda").value.trim();
+      const qtd = parseInt(document.getElementById("quantidadeVenda").value);
+      if (!estoque[nome] || isNaN(qtd) || qtd <= 0 || estoque[nome] < qtd) return;
+      estoque[nome] -= qtd;
+      if (estoque[nome] === 0) delete estoque[nome];
+      localStorage.setItem('estoque', JSON.stringify(estoque)); // Salvar no LocalStorage
+      atualizarEstoque();
+    }
+
+    // Função para exportar os dados do LocalStorage para um arquivo JSON
+    function exportarEstoque() {
+      const estoqueExportado = localStorage.getItem('estoque');
+      if (!estoqueExportado) {
+        alert("Não há dados de estoque para exportar.");
+        return;
+      }
+
+      const blob = new Blob([estoqueExportado], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'estoque.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Atualizar a lista ao carregar a página
+    function carregarEstoque() {
+      const estoqueSalvo = localStorage.getItem('estoque');
+      if (estoqueSalvo) {
+        Object.assign(estoque, JSON.parse(estoqueSalvo));
+        atualizarEstoque();
+      }
+    }
+
+    // Inicializar o estoque ao carregar a página
+    carregarEstoque();
+
+    // Adicionar evento para os botões
+    document.getElementById("btnAdicionar").addEventListener("click", adicionarProduto);
+    document.getElementById("btnVender").addEventListener("click", venderProduto);
+    document.getElementById("btnExportar").addEventListener("click", exportarEstoque);
+
+  </script>
+
+</body>
+</html>
